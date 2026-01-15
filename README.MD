@@ -20,7 +20,7 @@ Simular **N dispositivos** que publican telemetría (temp, humedad, batería, es
 
 ---
 
-## Estructura de repo (limpia)
+## Estructura de repo
 
 ```
 iot-sim-backend/
