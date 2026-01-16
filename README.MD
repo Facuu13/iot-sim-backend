@@ -111,3 +111,26 @@ Elegí 1 cuando ya esté todo andando:
 * **Dockerizar backend** también
 
 ---
+
+
+## Lanzar el programa
+
+Primero, levantar el broker Mosquitto con Docker:
+
+1. Abrir Docker  
+2. Ir a la carpeta del proyecto  
+3. En la terminal ejecutar:
+
+```bash
+docker compose up -d
+```
+Segundo, activar el entorno virtual de python: 
+
+```bash
+source .venv/bin/activate
+
+python simulator/sim.py
+```
+
+
+
