@@ -34,3 +34,34 @@ def insert_telemetry(data):
     conn.commit()
     conn.close()
 
+def get_latest(device_id: str):
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM telemetry
+        WHERE device_id = ?
+        ORDER BY ts DESC
+        LIMIT 1
+    ''', (device_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def list_devices():
+    #quiero devolver la ultima medicion de cada dispositivo unico
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT device_id, device_type, status, battery_level, value, ts
+        FROM telemetry
+        WHERE id IN (
+            SELECT MAX(id)
+            FROM telemetry
+            GROUP BY device_id
+        )
+    ''')
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
