@@ -5,18 +5,37 @@ import paho.mqtt.client as mqtt
 
 import time
 
+from enum import Enum
+
+class DeviceStatus(Enum):
+    ONLINE = "online"
+    OFFLINE = "offline"
+    LOW_BATTERY = "low_battery"
+    ERROR = "error"
+
+
 class Device:
     def __init__(self, device_id, device_type):
         self.device_id = device_id
         self.device_type = device_type
-        self.status = "online"
+        self.status = DeviceStatus.ONLINE.value
         self.battery_level = 100
         self.value = None
 
+    #hacer un metodo para la bateria
+    def update_battery(self):
+        self.battery_level -= random.uniform(0.5, 2.0)
+        if self.battery_level <= 0:
+            self.status = DeviceStatus.OFFLINE.value
+            self.battery_level = 0
+        elif self.battery_level < 20:
+            self.status = DeviceStatus.LOW_BATTERY.value
+        else:
+            self.status = DeviceStatus.ONLINE.value
+
     # Generar una lectura simulada basada en el tipo de dispositivo
     def generate_reading(self):
-        if self.battery_level > 0:
-            self.battery_level -= 1
+        self.update_battery()
         if self.device_type == "temperature_sensor":
             self.value = round(random.uniform(12.0, 50.0), 2)  # Temperatura en grados Celsius
             return self.value
@@ -30,27 +49,33 @@ class Device:
             return None
     
     # Convertir el estado del dispositivo a JSON
-    def to_json(self):
-        return json.dumps({
+    def to_dict(self):
+        return {
             "device_id": self.device_id,
             "device_type": self.device_type,
-            "value": self.value,
             "status": self.status,
-            "battery_level": self.battery_level
-        })
+            "battery_level": self.battery_level,
+            "value": self.value,
+            "ts": int(time.time())
+        }
+
         
 
 client = mqtt.Client()
 client.connect("localhost", 1883, 60)
 
-dev = Device("001", "temperature_sensor")
-print(f"Device ID: {dev.device_id}, Type: {dev.device_type}, Battery: {dev.battery_level}%")
-topic = f"devices/{dev.device_id}/telemetry"
+devices = []
+device_types = ["temperature_sensor", "humidity_sensor", "pressure_sensor"]
+for i in range(10):
+    dev_type = random.choice(device_types)
+    dev = Device(f"{i:03d}", dev_type)
+    devices.append(dev)
 
-for i in range(5):
-    dev.generate_reading()
-    # Publicar el estado del dispositivo en el tópico MQTT
-    client.publish(topic, payload=str(dev.to_json()), qos=0, retain=False)
+
+for _ in range(5):
+    for dev in devices:
+        dev.generate_reading()
+        topic = f"devices/{dev.device_id}/telemetry"
+        client.publish(topic, payload=json.dumps(dev.to_dict()), qos=0, retain=False)
     time.sleep(2)
-
 
