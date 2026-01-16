@@ -16,7 +16,7 @@ def on_message(client, userdata, msg):
     insert_telemetry(data)
     print(f"Datos insertados en la base de datos: {data}")
 
-def main():
+def start_mqtt():
     # Inicializar la base de datos
     init_db()
 
@@ -30,8 +30,9 @@ def main():
     # Conectar al broker MQTT
     client.connect("localhost", 1883, 60)
 
-    # Iniciar el loop del cliente MQTT
-    client.loop_forever()
+    client.loop_start()
+    
+    return client
 
-if __name__ == "__main__":
-    main()
+
+
